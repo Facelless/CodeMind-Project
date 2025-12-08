@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"miservicegolang/core/domain/ai"
 	"miservicegolang/core/pkg"
 	"miservicegolang/infrastructure/repository"
 )
@@ -14,8 +13,8 @@ func NewAiUsecase(r repository.GroqAiRepo) *AiUsecase {
 	return &AiUsecase{repo: r}
 }
 
-func (u *AiUsecase) Generate(prompt ai.GroqAi) (string, pkg.Log) {
-	if prompt.Prompt == "" {
+func (u *AiUsecase) Generate(prompt string) (string, pkg.Log) {
+	if prompt == "" {
 		return "", pkg.Log{
 			Error: true,
 			Body: map[string]any{

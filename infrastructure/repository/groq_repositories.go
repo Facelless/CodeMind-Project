@@ -2,14 +2,13 @@ package repository
 
 import (
 	"context"
-	"miservicegolang/core/domain/ai"
 	"miservicegolang/core/pkg"
 
 	openai "github.com/sashabaranov/go-openai"
 )
 
 type GroqAiRepo interface {
-	GenerateText(prompt ai.GroqAi) (string, pkg.Log)
+	GenerateText(prompt string) (string, pkg.Log)
 }
 
 type GroqAi struct {
@@ -27,14 +26,14 @@ func NewGroqAiRepo(key string) *GroqAi {
 	}
 }
 
-func (g *GroqAi) GenerateText(prompt ai.GroqAi) (string, pkg.Log) {
+func (g *GroqAi) GenerateText(prompt string) (string, pkg.Log) {
 
 	req := openai.ChatCompletionRequest{
 		Model: "llama-3.1-8b-instant",
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    "user",
-				Content: prompt.Prompt,
+				Content: prompt,
 			},
 		},
 	}
@@ -49,7 +48,7 @@ func (g *GroqAi) GenerateText(prompt ai.GroqAi) (string, pkg.Log) {
 			Error: true,
 			Body: map[string]any{
 				"message": "Unable to connect.",
-				"error":   err.Error(),
+				"err":     err.Error(),
 			},
 		}
 	}

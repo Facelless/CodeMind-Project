@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"miservicegolang/core/domain/ai"
 	"miservicegolang/core/usecase"
 	"net/http"
 
@@ -20,7 +19,7 @@ func NewAiController(u *usecase.AiUsecase) *AiController {
 
 func (c *AiController) Generate(ctx *gin.Context) {
 	var body struct {
-		Prompt ai.GroqAi `json:"prompt"`
+		Prompt string `json:"prompt"`
 	}
 
 	if err := ctx.BindJSON(&body); err != nil {
