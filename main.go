@@ -5,9 +5,9 @@ import (
 	"miservicegolang/core/usecase"
 	"miservicegolang/infrastructure/controller"
 	"miservicegolang/infrastructure/database"
-	"miservicegolang/infrastructure/file"
 	"miservicegolang/infrastructure/repository"
 	"miservicegolang/routes"
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -20,12 +20,22 @@ func main() {
 	aiUsecase := usecase.NewAiUsecase(groqRepo, groqDatabaseRepo)
 	aiController := controller.NewAiController(aiUsecase)
 	fmt.Println(log)
-	fileService := file.NewLocalFileService()
-	unzipService := file.NewLocalUnzipService()
-	readService := file.NewLocalReadFileService()
-	uploadUc := usecase.NewUploadUsecase(fileService, unzipService, readService)
-	upload := controller.NewUploadController(uploadUc)
+
 	r := gin.Default()
-	routes.SetupRoutes(r, aiController, upload)
-	r.Run(":8080")
+
+	// CORS
+	r.Use(func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization")
+
+		if c.Request.Method == http.MethodOptions {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	})
+	routes.SetupRoutes(r, aiController)
+	r.Run(":3000")
 }

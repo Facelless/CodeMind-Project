@@ -5,12 +5,14 @@ import (
 	"miservicegolang/core/domain/ai"
 	"miservicegolang/core/pkg"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type GroqDatabaseRepo interface {
 	Insert(ctx context.Context, response ai.GroqAi) (primitive.ObjectID, pkg.Log)
+	FindByID(ctx context.Context, id primitive.ObjectID) (ai.GroqAi, pkg.Log)
 }
 
 type GroqDatabase struct {
@@ -22,29 +24,31 @@ func NewGroqAiDatabaseRepo(client *mongo.Client) GroqDatabaseRepo {
 }
 
 func (g *GroqDatabase) Insert(ctx context.Context, r ai.GroqAi) (primitive.ObjectID, pkg.Log) {
-
 	collection := g.client.Database("saas").Collection("ia")
 
-	insertResponse, err := collection.InsertOne(ctx, r)
+	inserted, err := collection.InsertOne(ctx, r)
 	if err != nil {
 		return primitive.NilObjectID, pkg.Log{
 			Error: true,
-			Body: map[string]any{
-				"message": "failed to insert document",
-				"error":   err.Error(),
-			},
+			Body:  map[string]any{"message": "Insert failed", "err": err.Error()},
 		}
 	}
 
-	oid, ok := insertResponse.InsertedID.(primitive.ObjectID)
-	if !ok {
-		return primitive.NilObjectID, pkg.Log{
+	id := inserted.InsertedID.(primitive.ObjectID)
+	return id, pkg.Log{}
+}
+
+func (g *GroqDatabase) FindByID(ctx context.Context, id primitive.ObjectID) (ai.GroqAi, pkg.Log) {
+	collection := g.client.Database("saas").Collection("ia")
+
+	var result ai.GroqAi
+	err := collection.FindOne(ctx, bson.M{"_id": id}).Decode(&result)
+	if err != nil {
+		return ai.GroqAi{}, pkg.Log{
 			Error: true,
-			Body: map[string]any{
-				"message": "failed to parse inserted ID",
-			},
+			Body:  map[string]any{"message": "Document not found", "err": err.Error()},
 		}
 	}
 
-	return oid, pkg.Log{}
+	return result, pkg.Log{}
 }

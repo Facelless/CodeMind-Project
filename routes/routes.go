@@ -6,13 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRoutes(r *gin.Engine, ai *controller.AiController, upload *controller.UploadController) {
+func SetupRoutes(r *gin.Engine, ai *controller.AiController) {
 	aiRoute := r.Group("/ai")
 	{
 		aiRoute.POST("/prompt", ai.Generate)
-	}
-	fileRoute := r.Group("/file")
-	{
-		fileRoute.POST("/upload", upload.UploadFile)
+		aiRoute.POST("/verify", ai.Verify)
 	}
 }

@@ -17,6 +17,7 @@ func ConnectMongodb() (*mongo.Client, pkg.Log) {
 			Error: true,
 			Body: map[string]any{
 				"message": "Error loading .env",
+				"err":     err.Error(),
 			},
 		}
 	}
@@ -27,7 +28,7 @@ func ConnectMongodb() (*mongo.Client, pkg.Log) {
 			Error: true,
 			Body: map[string]any{
 				"message": "Error connecting to mongodb.",
-				"err":     err,
+				"err":     err.Error(),
 			},
 		}
 	}
@@ -36,7 +37,7 @@ func ConnectMongodb() (*mongo.Client, pkg.Log) {
 			Error: true,
 			Body: map[string]any{
 				"message": "Error sending connection ping",
-				"err":     err,
+				"err":     err.Error(),
 			},
 		}
 	}
