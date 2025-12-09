@@ -11,12 +11,14 @@ import (
 type UploadUsecase struct {
 	FileService files.FileService
 	ZipService  files.ZipService
+	ReadService files.ReadFileService
 }
 
-func NewUploadUsecase(f files.FileService, z files.ZipService) *UploadUsecase {
+func NewUploadUsecase(f files.FileService, z files.ZipService, r files.ReadFileService) *UploadUsecase {
 	return &UploadUsecase{
 		FileService: f,
 		ZipService:  z,
+		ReadService: r,
 	}
 }
 
@@ -43,11 +45,23 @@ func (u *UploadUsecase) Execute(file multipart.File) (error, pkg.Log) {
 		}
 	}
 
+	contentFile, err, _ := u.ReadService.OpenFile(files)
+	if err != nil {
+		return nil, pkg.Log{
+			Error: true,
+			Body: map[string]any{
+				"message": "Error open file",
+				"err":     err,
+			},
+		}
+	}
+
 	return nil, pkg.Log{
 		Error: false,
 		Body: map[string]any{
 			"message": "File extracted successfully.",
 			"files":   files,
+			"content": contentFile,
 		},
 	}
 }

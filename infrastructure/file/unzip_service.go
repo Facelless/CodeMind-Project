@@ -43,6 +43,7 @@ func (z *UnzipService) Unzip(src string, dst string) ([]string, error, pkg.Log) 
 				Error: true,
 				Body: map[string]any{
 					"message": "Error creating file",
+					"err":     err,
 				},
 			}
 		}
@@ -52,6 +53,7 @@ func (z *UnzipService) Unzip(src string, dst string) ([]string, error, pkg.Log) 
 				Error: true,
 				Body: map[string]any{
 					"message": "Error open file.",
+					"err":     err,
 				},
 			}
 		}
@@ -61,6 +63,7 @@ func (z *UnzipService) Unzip(src string, dst string) ([]string, error, pkg.Log) 
 				Error: true,
 				Body: map[string]any{
 					"message": "Erro copy file.",
+					"err":     err,
 				},
 			}
 		}
