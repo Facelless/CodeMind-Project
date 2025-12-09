@@ -11,32 +11,31 @@ type AiController struct {
 	usecase *usecase.AiUsecase
 }
 
-func NewAiController(u *usecase.AiUsecase) *AiController {
+func NewAiController(a *usecase.AiUsecase) *AiController {
 	return &AiController{
-		usecase: u,
-	}
+		usecase: a}
 }
 
-func (c *AiController) Generate(ctx *gin.Context) {
+func (a *AiController) Generate(c *gin.Context) {
 	var body struct {
 		Prompt string `json:"prompt"`
 	}
 
-	if err := ctx.BindJSON(&body); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+	if err := c.BindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   true,
 			"message": "Invalid Json body",
 		})
 		return
 	}
 
-	text, log := c.usecase.Generate(body.Prompt)
+	text, log := a.usecase.Generate(body.Prompt)
 	if log.Error {
-		ctx.JSON(http.StatusInternalServerError, log.Body)
+		c.JSON(http.StatusInternalServerError, log.Body)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"result": text,
 	})
 }

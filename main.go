@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"miservicegolang/core/usecase"
 	"miservicegolang/infrastructure/controller"
+	"miservicegolang/infrastructure/database"
 	"miservicegolang/infrastructure/file"
 	"miservicegolang/infrastructure/repository"
 	"miservicegolang/routes"
@@ -12,10 +14,12 @@ import (
 )
 
 func main() {
+	client, log := database.ConnectMongodb()
 	groqRepo := repository.NewGroqAiRepo(os.Getenv("GROQ_KEY"))
-	aiUsecase := usecase.NewAiUsecase(groqRepo)
+	groqDatabaseRepo := usecase.NewGroqAiDatabaseRepo(client)
+	aiUsecase := usecase.NewAiUsecase(groqRepo, groqDatabaseRepo)
 	aiController := controller.NewAiController(aiUsecase)
-
+	fmt.Println(log)
 	fileService := file.NewLocalFileService()
 	unzipService := file.NewLocalUnzipService()
 	uploadUc := usecase.NewUploadUsecase(fileService, unzipService)
