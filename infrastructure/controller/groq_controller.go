@@ -17,15 +17,18 @@ func NewAiController(a *usecase.AiUsecase) *AiController {
 
 func (a *AiController) Generate(c *gin.Context) {
 	result, log := a.usecase.Generate(
-		"Gere um desafio simples envolvendo programação. Não gere código.",
+		"Gere um desafio simples para fazer envolvendo programacao, nao gere o codigo.",
 	)
-
 	if log.Error {
 		c.JSON(http.StatusInternalServerError, log.Body)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"result": result})
+	c.JSON(http.StatusOK, gin.H{
+		"id":        result.ID.Hex(),
+		"challenge": result.Answer,
+		"completed": result.Completed,
+	})
 }
 
 func (a *AiController) Verify(c *gin.Context) {
@@ -34,16 +37,22 @@ func (a *AiController) Verify(c *gin.Context) {
 	}
 
 	if err := c.BindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": "Invalid JSON"})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   true,
+			"message": "Invalid JSON body",
+		})
 		return
 	}
 
-	result, log := a.usecase.Verify("693849deb204cc30c0240bdf", body.Code)
-
+	data, log := a.usecase.Verify("693860d4add28394c27a83e6", body.Code)
 	if log.Error {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "log": log.Body})
+		c.JSON(http.StatusBadRequest, log.Body)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"error": false, "data": result})
+	c.JSON(http.StatusOK, gin.H{
+		"id":        data.ID.Hex(),
+		"verify":    data.Verify,
+		"completed": data.Completed,
+	})
 }

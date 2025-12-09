@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"miservicegolang/core/usecase"
+	"miservicegolang/infrastructure/adapter"
 	"miservicegolang/infrastructure/controller"
 	"miservicegolang/infrastructure/database"
 	"miservicegolang/infrastructure/repository"
@@ -15,15 +16,12 @@ import (
 
 func main() {
 	client, log := database.ConnectMongodb()
-	groqRepo := repository.NewGroqAiRepo(os.Getenv("GROQ_KEY"))
-	groqDatabaseRepo := usecase.NewGroqAiDatabaseRepo(client)
+	groqRepo := adapter.NewGroqAiRepo(os.Getenv("GROQ_KEY"))
+	groqDatabaseRepo := repository.NewGroqAiDatabaseRepo(client)
 	aiUsecase := usecase.NewAiUsecase(groqRepo, groqDatabaseRepo)
 	aiController := controller.NewAiController(aiUsecase)
 	fmt.Println(log)
-
 	r := gin.Default()
-
-	// CORS
 	r.Use(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
