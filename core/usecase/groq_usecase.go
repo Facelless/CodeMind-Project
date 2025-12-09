@@ -52,23 +52,41 @@ func (u *AiUsecase) Verify(id string, code string) (ai.GroqAi, pkg.Log) {
 			Body:  map[string]any{"message": "Invalid ID", "err": err.Error()},
 		}
 	}
+
 	original, log := u.db.FindByID(context.Background(), oid)
 	if log.Error {
 		return ai.GroqAi{}, log
 	}
-	if original.Verify != "" {
-		return original, pkg.Log{}
-	}
-	prompt := "Verifique se o código `" + code + "` cumpre totalmente o desafio: `" + original.Answer +
-		"`. Responda APENAS com 'sim' ou 'não'. Nada mais."
-	answer, log2 := u.repo.GenerateText(prompt)
+
+	prompt := `
+	Você é um verificador de código extremamente preciso.
+
+	Desafio original:
+	"` + original.Answer + `"
+
+	Código enviado pelo usuário:
+	"` + code + `"
+
+	Analise se o código atende COMPLETAMENTE todos os requisitos.
+	Ignore estilo, comentários e pequenas diferenças irrelevantes.
+
+	Responda APENAS com:
+	sim
+	ou
+	não
+	`
+	generated, log2 := u.Generate(prompt)
 	if log2.Error {
 		return ai.GroqAi{}, log2
 	}
-	answer = strings.ToLower(strings.TrimSpace(answer))
+	answer := strings.ToLower(generated.Answer)
+	answer = strings.TrimSpace(answer)
+	answer = strings.ReplaceAll(answer, `"`, "")
+
 	if answer != "sim" && answer != "não" {
 		answer = "não"
 	}
+
 	original.Verify = answer
 	original.Completed = (answer == "sim")
 

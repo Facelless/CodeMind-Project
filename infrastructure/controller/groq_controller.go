@@ -43,7 +43,6 @@ func (a *AiController) Verify(c *gin.Context) {
 		})
 		return
 	}
-
 	data, log := a.usecase.Verify("693860d4add28394c27a83e6", body.Code)
 	if log.Error {
 		c.JSON(http.StatusBadRequest, log.Body)
