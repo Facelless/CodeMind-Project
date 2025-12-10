@@ -19,10 +19,10 @@ func main() {
 	groqRepo := adapter.NewGroqAiRepo(os.Getenv("GROQ_KEY"))
 	groqDatabaseRepo := repository.NewGroqAiDatabaseRepo(client)
 	userDatabse := repository.NewUserDatabaseRepo(client)
-	aiUsecase := usecase.NewAiUsecase(groqRepo, groqDatabaseRepo, userDatabse)
-	aiController := controller.NewAiController(aiUsecase)
 	userUsecase := usecase.NewUserUsecase(userDatabse)
 	useController := controller.NewUserController(userUsecase)
+	aiUsecase := usecase.NewAiUsecase(groqRepo, groqDatabaseRepo, *userUsecase)
+	aiController := controller.NewAiController(aiUsecase)
 	fmt.Println(log)
 	r := gin.Default()
 	r.Use(func(c *gin.Context) {

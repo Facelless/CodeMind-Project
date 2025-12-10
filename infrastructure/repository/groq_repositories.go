@@ -112,7 +112,7 @@ func (g *GroqDatabase) Delete(ctx context.Context, id primitive.ObjectID) pkg.Lo
 	c, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	_, err := g.collection.DeleteOne(c, bson.M{"_id": id})
+	_, err := g.collection.DeleteOne(c, bson.M{"_userid": id})
 	if err != nil {
 		return pkg.Log{
 			Error: true,

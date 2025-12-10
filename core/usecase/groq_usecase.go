@@ -9,18 +9,17 @@ import (
 	"miservicegolang/infrastructure/repository"
 	"strings"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type AiUsecase struct {
 	repo    adapter.GroqAiRepo
 	db      repository.GroqDatabaseRepo
-	db_user repository.UserDatabaseRepo
+	usecase UserUsecase
 }
 
-func NewAiUsecase(r adapter.GroqAiRepo, db repository.GroqDatabaseRepo, db_user repository.UserDatabaseRepo) *AiUsecase {
-	return &AiUsecase{repo: r, db: db, db_user: db_user}
+func NewAiUsecase(r adapter.GroqAiRepo, db repository.GroqDatabaseRepo, usecase UserUsecase) *AiUsecase {
+	return &AiUsecase{repo: r, db: db, usecase: usecase}
 }
 
 func (u *AiUsecase) Generate(prompt string, userId string) (ai.GroqAi, pkg.Log) {
@@ -79,15 +78,7 @@ func (u *AiUsecase) Verify(id string, code string) (ai.GroqAi, pkg.Log) {
 	original.Verify = answer
 	original.Completed = (answer == "sim")
 	if original.Completed == true {
-		update := bson.M{
-			"$inc": bson.M{
-				"exp": 15,
-			},
-		}
-		log := u.db_user.Update(context.Background(), original.UserId, update)
-		if log.Error {
-			return ai.GroqAi{}, log
-		}
+		u.usecase.SetExp(oid)
 		u.db.Delete(context.Background(), oid)
 	}
 	u.db.UpdateVerify(context.Background(), oid, answer, original.Completed)
