@@ -13,13 +13,13 @@ import (
 )
 
 type AiUsecase struct {
-	repo    adapter.GroqAiRepo
-	db      repository.GroqDatabaseRepo
-	usecase UserUsecase
+	repo   adapter.GroqAiRepo
+	db     repository.GroqDatabaseRepo
+	growth repository.GrowthRepo
 }
 
-func NewAiUsecase(r adapter.GroqAiRepo, db repository.GroqDatabaseRepo, usecase UserUsecase) *AiUsecase {
-	return &AiUsecase{repo: r, db: db, usecase: usecase}
+func NewAiUsecase(r adapter.GroqAiRepo, db repository.GroqDatabaseRepo, growth repository.GrowthRepo) *AiUsecase {
+	return &AiUsecase{repo: r, db: db, growth: growth}
 }
 
 func (u *AiUsecase) Generate(prompt string, userId string) (ai.GroqAi, pkg.Log) {
@@ -78,7 +78,7 @@ func (u *AiUsecase) Verify(id string, code string) (ai.GroqAi, pkg.Log) {
 	original.Verify = answer
 	original.Completed = (answer == "sim")
 	if original.Completed == true {
-		u.usecase.SetExp(oid)
+		u.growth.SetExp(oid)
 		u.db.Delete(context.Background(), oid)
 	}
 	u.db.UpdateVerify(context.Background(), oid, answer, original.Completed)
