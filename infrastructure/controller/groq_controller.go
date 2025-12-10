@@ -17,8 +17,11 @@ func NewAiController(a *usecase.AiUsecase) *AiController {
 
 func (a *AiController) Generate(c *gin.Context) {
 	result, log := a.usecase.Generate(
-		"Gere um desafio simples para fazer envolvendo programacao, nao gere o codigo.",
+		`
+		Gere um desafio de programação totalmente original que exija raciocínio logico, gere um desafio extramamente facil que nao precise apis, banco de dados.
+		`,
 	)
+
 	if log.Error {
 		c.JSON(http.StatusInternalServerError, log.Body)
 		return
@@ -43,7 +46,7 @@ func (a *AiController) Verify(c *gin.Context) {
 		})
 		return
 	}
-	data, log := a.usecase.Verify("693860d4add28394c27a83e6", body.Code)
+	data, log := a.usecase.Verify("6938bc26c1628de6cc606fd2", body.Code)
 	if log.Error {
 		c.JSON(http.StatusBadRequest, log.Body)
 		return

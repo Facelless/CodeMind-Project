@@ -20,6 +20,9 @@ func main() {
 	groqDatabaseRepo := repository.NewGroqAiDatabaseRepo(client)
 	aiUsecase := usecase.NewAiUsecase(groqRepo, groqDatabaseRepo)
 	aiController := controller.NewAiController(aiUsecase)
+	userDatabse := repository.NewUserDatabaseRepo(client)
+	userUsecase := usecase.NewUserUsecase(userDatabse)
+	useController := controller.NewUserController(userUsecase)
 	fmt.Println(log)
 	r := gin.Default()
 	r.Use(func(c *gin.Context) {
@@ -34,6 +37,6 @@ func main() {
 
 		c.Next()
 	})
-	routes.SetupRoutes(r, aiController)
+	routes.SetupRoutes(r, aiController, useController)
 	r.Run(":3000")
 }

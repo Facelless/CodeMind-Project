@@ -16,6 +16,7 @@ type GroqDatabaseRepo interface {
 	Insert(ctx context.Context, response ai.GroqAi) (primitive.ObjectID, pkg.Log)
 	FindByID(ctx context.Context, id primitive.ObjectID) (ai.GroqAi, pkg.Log)
 	UpdateVerify(ctx context.Context, id primitive.ObjectID, verify string, completed bool) pkg.Log
+	Delete(ctx context.Context, id primitive.ObjectID) pkg.Log
 }
 
 type GroqDatabase struct {
@@ -101,6 +102,21 @@ func (g *GroqDatabase) UpdateVerify(ctx context.Context, id primitive.ObjectID, 
 		return pkg.Log{
 			Error: true,
 			Body:  map[string]any{"message": "Document not found"},
+		}
+	}
+
+	return pkg.Log{}
+}
+
+func (g *GroqDatabase) Delete(ctx context.Context, id primitive.ObjectID) pkg.Log {
+	c, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	_, err := g.collection.DeleteOne(c, bson.M{"_id": id})
+	if err != nil {
+		return pkg.Log{
+			Error: true,
+			Body:  map[string]any{"message": "Update failed", "err": err.Error()},
 		}
 	}
 

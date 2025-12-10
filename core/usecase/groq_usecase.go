@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"miservicegolang/core/domain/ai"
 	"miservicegolang/core/pkg"
 	"miservicegolang/infrastructure/adapter"
@@ -21,13 +22,6 @@ func NewAiUsecase(r adapter.GroqAiRepo, db repository.GroqDatabaseRepo) *AiUseca
 }
 
 func (u *AiUsecase) Generate(prompt string) (ai.GroqAi, pkg.Log) {
-	if prompt == "" {
-		return ai.GroqAi{}, pkg.Log{
-			Error: true,
-			Body:  map[string]any{"message": "Prompt cannot be empty"},
-		}
-	}
-
 	text, log := u.repo.GenerateText(prompt)
 	if log.Error {
 		return ai.GroqAi{}, log
@@ -58,30 +52,16 @@ func (u *AiUsecase) Verify(id string, code string) (ai.GroqAi, pkg.Log) {
 		return ai.GroqAi{}, log
 	}
 
-	prompt := `
-	Você é um verificador de código extremamente preciso.
+	prompt := "Você é um verificador de código rigoroso. Desafio original: " + original.Answer + " Código do usuário: " + code + " Avalie se o código cumpre TODOS os requisitos do desafio. Responda apenas: - sim → se todos os requisitos foram atendidos - nao: <motivo> → se algum requisito não foi atendido Não inclua nada além dessas respostas."
 
-	Desafio original:
-	"` + original.Answer + `"
-
-	Código enviado pelo usuário:
-	"` + code + `"
-
-	Analise se o código atende COMPLETAMENTE todos os requisitos.
-	Ignore estilo, comentários e pequenas diferenças irrelevantes.
-
-	Responda APENAS com:
-	sim
-	ou
-	não
-	`
-	generated, log2 := u.Generate(prompt)
+	generated, log2 := u.repo.GenerateText(prompt)
 	if log2.Error {
 		return ai.GroqAi{}, log2
 	}
-	answer := strings.ToLower(generated.Answer)
+	answer := strings.ToLower(generated)
 	answer = strings.TrimSpace(answer)
 	answer = strings.ReplaceAll(answer, `"`, "")
+	fmt.Println(generated)
 
 	if answer != "sim" && answer != "não" {
 		answer = "não"
@@ -89,7 +69,9 @@ func (u *AiUsecase) Verify(id string, code string) (ai.GroqAi, pkg.Log) {
 
 	original.Verify = answer
 	original.Completed = (answer == "sim")
-
+	if original.Completed == true {
+		u.db.Delete(context.Background(), oid)
+	}
 	u.db.UpdateVerify(context.Background(), oid, answer, original.Completed)
 
 	return original, pkg.Log{}
