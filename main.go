@@ -24,6 +24,7 @@ func main() {
 	growth := usecase.NewGrowthUsecase(userDatabse)
 	aiUsecase := usecase.NewAiUsecase(groqRepo, groqDatabaseRepo, growth)
 	aiController := controller.NewAiController(aiUsecase)
+	progressController := controller.NewProgressController(growth)
 	fmt.Println(log)
 	r := gin.Default()
 	r.Use(func(c *gin.Context) {
@@ -38,6 +39,6 @@ func main() {
 
 		c.Next()
 	})
-	routes.SetupRoutes(r, aiController, useController)
+	routes.SetupRoutes(r, aiController, useController, progressController)
 	r.Run(":3000")
 }

@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type UserDatabaseRepo interface {
@@ -18,6 +19,7 @@ type UserDatabaseRepo interface {
 	FindByEmail(ctx context.Context, email string) (user.User, pkg.Log)
 	Delete(ctx context.Context, id primitive.ObjectID) pkg.Log
 	Update(ctx context.Context, id primitive.ObjectID, dates bson.M) pkg.Log
+	Find(ctx context.Context, filter bson.M, filterOp bson.M) (*mongo.Cursor, pkg.Log)
 }
 
 type UserDatabase struct {
@@ -134,4 +136,16 @@ func (u *UserDatabase) Update(ctx context.Context, id primitive.ObjectID, dates 
 
 	return pkg.Log{}
 
+}
+
+func (u *UserDatabase) Find(ctx context.Context, filter bson.M, filterOp bson.M) (*mongo.Cursor, pkg.Log) {
+	c, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	result, err := u.collection.Find(c, filter, options.Find().SetSort(filterOp))
+	if err != nil {
+		return nil, pkg.Log{Error: true, Body: map[string]any{"err": err.Error()}}
+	}
+
+	return result, pkg.Log{}
 }

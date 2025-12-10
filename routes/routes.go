@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRoutes(r *gin.Engine, ai *controller.AiController, user *controller.UserController) {
+func SetupRoutes(r *gin.Engine, ai *controller.AiController, user *controller.UserController, progress *controller.ProgressController) {
 	aiRoute := r.Group("/ai")
 	{
 		aiRoute.POST("/prompt", ai.Generate)
@@ -16,5 +16,9 @@ func SetupRoutes(r *gin.Engine, ai *controller.AiController, user *controller.Us
 	{
 		authRouter.POST("/register", user.Register)
 		authRouter.POST("/login", user.Login)
+	}
+	progessRouter := r.Group("/progress")
+	{
+		progessRouter.POST("/rank", progress.Rank)
 	}
 }
