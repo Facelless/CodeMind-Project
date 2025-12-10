@@ -9,25 +9,34 @@ import (
 	"miservicegolang/infrastructure/repository"
 	"strings"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type AiUsecase struct {
-	repo adapter.GroqAiRepo
-	db   repository.GroqDatabaseRepo
+	repo    adapter.GroqAiRepo
+	db      repository.GroqDatabaseRepo
+	db_user repository.UserDatabaseRepo
 }
 
-func NewAiUsecase(r adapter.GroqAiRepo, db repository.GroqDatabaseRepo) *AiUsecase {
-	return &AiUsecase{repo: r, db: db}
+func NewAiUsecase(r adapter.GroqAiRepo, db repository.GroqDatabaseRepo, db_user repository.UserDatabaseRepo) *AiUsecase {
+	return &AiUsecase{repo: r, db: db, db_user: db_user}
 }
 
-func (u *AiUsecase) Generate(prompt string) (ai.GroqAi, pkg.Log) {
+func (u *AiUsecase) Generate(prompt string, userId string) (ai.GroqAi, pkg.Log) {
 	text, log := u.repo.GenerateText(prompt)
 	if log.Error {
 		return ai.GroqAi{}, log
 	}
+	oid, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		return ai.GroqAi{}, pkg.Log{
+			Error: true,
+			Body:  map[string]any{"message": "Invalid ID", "err": err.Error()},
+		}
+	}
 
-	result := ai.GroqAi{Answer: text, Completed: false}
+	result := ai.GroqAi{Answer: text, Completed: false, UserId: oid}
 
 	id, log := u.db.Insert(context.Background(), result)
 	if log.Error {
@@ -70,6 +79,15 @@ func (u *AiUsecase) Verify(id string, code string) (ai.GroqAi, pkg.Log) {
 	original.Verify = answer
 	original.Completed = (answer == "sim")
 	if original.Completed == true {
+		update := bson.M{
+			"$inc": bson.M{
+				"exp": 15,
+			},
+		}
+		log := u.db_user.Update(context.Background(), original.UserId, update)
+		if log.Error {
+			return ai.GroqAi{}, log
+		}
 		u.db.Delete(context.Background(), oid)
 	}
 	u.db.UpdateVerify(context.Background(), oid, answer, original.Completed)

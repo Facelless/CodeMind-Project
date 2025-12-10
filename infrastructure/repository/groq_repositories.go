@@ -59,7 +59,7 @@ func (g *GroqDatabase) FindByID(ctx context.Context, id primitive.ObjectID) (ai.
 	defer cancel()
 
 	var result ai.GroqAi
-	err := g.collection.FindOne(c, bson.M{"_id": id}).Decode(&result)
+	err := g.collection.FindOne(c, bson.M{"_userid": id}).Decode(&result)
 
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {

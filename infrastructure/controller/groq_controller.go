@@ -16,10 +16,21 @@ func NewAiController(a *usecase.AiUsecase) *AiController {
 }
 
 func (a *AiController) Generate(c *gin.Context) {
+	var body struct {
+		UserId string `json:"id"`
+	}
+	if err := c.BindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   true,
+			"message": "Invalid JSON body",
+		})
+		return
+	}
 	result, log := a.usecase.Generate(
 		`
 		Gere um desafio de programação totalmente original que exija raciocínio logico, gere um desafio extramamente facil que nao precise apis, banco de dados.
 		`,
+		body.UserId,
 	)
 
 	if log.Error {
@@ -29,6 +40,7 @@ func (a *AiController) Generate(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"id":        result.ID.Hex(),
+		"user_id":   result.UserId.Hex(),
 		"challenge": result.Answer,
 		"completed": result.Completed,
 	})
@@ -36,7 +48,8 @@ func (a *AiController) Generate(c *gin.Context) {
 
 func (a *AiController) Verify(c *gin.Context) {
 	var body struct {
-		Code string `json:"code"`
+		Code   string `json:"code"`
+		UserId string `json:"id"`
 	}
 
 	if err := c.BindJSON(&body); err != nil {
@@ -46,7 +59,7 @@ func (a *AiController) Verify(c *gin.Context) {
 		})
 		return
 	}
-	data, log := a.usecase.Verify("6938bc26c1628de6cc606fd2", body.Code)
+	data, log := a.usecase.Verify(body.UserId, body.Code)
 	if log.Error {
 		c.JSON(http.StatusBadRequest, log.Body)
 		return

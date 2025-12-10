@@ -68,7 +68,6 @@ func (u *UserUsecase) Login(email, password string) (string, pkg.Log) {
 			},
 		}
 	}
-
 	token, err := security.GenereateToken(dates.ID)
 	if err != nil {
 		return "", pkg.Log{

@@ -22,7 +22,7 @@ func GenereateToken(userId primitive.ObjectID) (string, error) {
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, Claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims)
 	return token.SignedString(jwtToken)
 }
 
