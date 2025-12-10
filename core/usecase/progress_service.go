@@ -1,22 +1,23 @@
-package repository
+package usecase
 
 import (
 	"context"
 	"miservicegolang/core/pkg"
+	"miservicegolang/infrastructure/repository"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type GrowthRepo interface {
+type GrowthUsecase interface {
 	SetExp(id primitive.ObjectID) pkg.Log
 }
 
 type Growth struct {
-	db UserDatabaseRepo
+	db repository.UserDatabaseRepo
 }
 
-func NewGrowthRepo(db UserDatabaseRepo) GrowthRepo {
+func NewGrowthUsecase(db repository.UserDatabaseRepo) GrowthUsecase {
 	return &Growth{db: db}
 }
 

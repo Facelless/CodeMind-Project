@@ -21,7 +21,7 @@ func main() {
 	userDatabse := repository.NewUserDatabaseRepo(client)
 	userUsecase := usecase.NewUserUsecase(userDatabse)
 	useController := controller.NewUserController(userUsecase)
-	growth := repository.NewGrowthRepo(userDatabse)
+	growth := usecase.NewGrowthUsecase(userDatabse)
 	aiUsecase := usecase.NewAiUsecase(groqRepo, groqDatabaseRepo, growth)
 	aiController := controller.NewAiController(aiUsecase)
 	fmt.Println(log)

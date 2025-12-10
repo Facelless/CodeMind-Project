@@ -15,10 +15,10 @@ import (
 type AiUsecase struct {
 	repo   adapter.GroqAiRepo
 	db     repository.GroqDatabaseRepo
-	growth repository.GrowthRepo
+	growth GrowthUsecase
 }
 
-func NewAiUsecase(r adapter.GroqAiRepo, db repository.GroqDatabaseRepo, growth repository.GrowthRepo) *AiUsecase {
+func NewAiUsecase(r adapter.GroqAiRepo, db repository.GroqDatabaseRepo, growth GrowthUsecase) *AiUsecase {
 	return &AiUsecase{repo: r, db: db, growth: growth}
 }
 
