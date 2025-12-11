@@ -1,44 +1,57 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"miservicegolang/core/usecase"
 	"miservicegolang/infrastructure/adapter"
 	"miservicegolang/infrastructure/controller"
 	"miservicegolang/infrastructure/database"
 	"miservicegolang/infrastructure/repository"
+	"miservicegolang/infrastructure/server"
 	"miservicegolang/routes"
-	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	client, log := database.ConnectMongodb()
-	groqRepo := adapter.NewGroqAiRepo(os.Getenv("GROQ_KEY"))
+	client, err := database.ConnectMongodb()
+	if err.Error {
+		log.Fatal(err)
+	}
+
+	userRepo := repository.NewUserDatabaseRepo(client)
 	groqDatabaseRepo := repository.NewGroqAiDatabaseRepo(client)
-	userDatabse := repository.NewUserDatabaseRepo(client)
-	userUsecase := usecase.NewUserUsecase(userDatabse)
-	useController := controller.NewUserController(userUsecase)
-	growth := usecase.NewGrowthUsecase(userDatabse)
-	aiUsecase := usecase.NewAiUsecase(groqRepo, groqDatabaseRepo, growth)
+	groqRepo := adapter.NewGroqAiRepo(os.Getenv("GROQ_KEY"))
+
+	userUsecase := usecase.NewUserUsecase(userRepo)
+	growthUsecase := usecase.NewGrowthUsecase(userRepo)
+	aiUsecase := usecase.NewAiUsecase(groqRepo, groqDatabaseRepo, growthUsecase)
+
 	aiController := controller.NewAiController(aiUsecase)
-	progressController := controller.NewProgressController(growth)
-	fmt.Println(log)
+	userController := controller.NewUserController(userUsecase)
+	progressController := controller.NewProgressController(growthUsecase)
+	matchUsecase := usecase.NewMatchUsecase()
+	wsHandler := server.NewWebsocketHandler(matchUsecase, userRepo)
+
 	r := gin.Default()
 	r.Use(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization")
 
-		if c.Request.Method == http.MethodOptions {
+		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
 			return
 		}
 
 		c.Next()
 	})
-	routes.SetupRoutes(r, aiController, useController, progressController)
-	r.Run(":3000")
+
+	routes.SetupRoutes(r, aiController, userController, progressController, wsHandler)
+
+	log.Println("Servidor rodando em :8080")
+	if err := r.Run(":8080"); err != nil {
+		log.Fatal("Erro ao iniciar o servidor:", err)
+	}
 }

@@ -2,23 +2,30 @@ package routes
 
 import (
 	"miservicegolang/infrastructure/controller"
+	"miservicegolang/infrastructure/server"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRoutes(r *gin.Engine, ai *controller.AiController, user *controller.UserController, progress *controller.ProgressController) {
+func SetupRoutes(r *gin.Engine, ai *controller.AiController, user *controller.UserController, progress *controller.ProgressController, wsHandler *server.WebsocketHandler) {
 	aiRoute := r.Group("/ai")
 	{
 		aiRoute.POST("/prompt", ai.Generate)
 		aiRoute.POST("/verify", ai.Verify)
 	}
+
 	authRouter := r.Group("/auth")
 	{
 		authRouter.POST("/register", user.Register)
 		authRouter.POST("/login", user.Login)
 	}
-	progessRouter := r.Group("/progress")
+
+	progressRouter := r.Group("/progress")
 	{
-		progessRouter.POST("/rank", progress.Rank)
+		progressRouter.POST("/rank", progress.Rank)
 	}
+
+	r.GET("/ws", func(c *gin.Context) {
+		wsHandler.HandleConnection(c.Writer, c.Request)
+	})
 }
