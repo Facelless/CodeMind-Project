@@ -10,4 +10,5 @@ type User struct {
 	Avatar   string             `json:"avatar"`
 	Exp      int                `json:"exp"`
 	Level    int                `json:"level"`
+	Elo      string             `json:"elo"`
 }

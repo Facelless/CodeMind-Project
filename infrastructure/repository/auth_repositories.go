@@ -20,6 +20,7 @@ type UserDatabaseRepo interface {
 	Delete(ctx context.Context, id primitive.ObjectID) pkg.Log
 	Update(ctx context.Context, id primitive.ObjectID, dates bson.M) pkg.Log
 	Find(ctx context.Context, filter bson.M, filterOp bson.M) (*mongo.Cursor, pkg.Log)
+	FindAllUsersById(ctx context.Context, ids []primitive.ObjectID) ([]*user.User, pkg.Log)
 }
 
 type UserDatabase struct {
@@ -148,4 +149,33 @@ func (u *UserDatabase) Find(ctx context.Context, filter bson.M, filterOp bson.M)
 	}
 
 	return result, pkg.Log{}
+}
+
+func (u *UserDatabase) FindAllUsersById(ctx context.Context, ids []primitive.ObjectID) ([]*user.User, pkg.Log) {
+	filter := bson.M{
+		"_id": bson.M{
+			"$in": ids,
+		},
+	}
+	cursor, err := u.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, pkg.Log{Error: true, Body: map[string]any{"err": err.Error()}}
+	}
+	defer cursor.Close(ctx)
+
+	var users []*user.User
+
+	for cursor.Next(ctx) {
+		var user user.User
+		if err != nil {
+			return nil, pkg.Log{Error: true, Body: map[string]any{"err": err.Error()}}
+		}
+		users = append(users, &user)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, pkg.Log{Error: true, Body: map[string]any{"err": err.Error()}}
+	}
+
+	return users, pkg.Log{}
 }

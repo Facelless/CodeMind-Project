@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 	"miservicegolang/core/domain/ai"
 	"miservicegolang/core/pkg"
 	"miservicegolang/infrastructure/adapter"
@@ -22,8 +21,13 @@ func NewAiUsecase(r adapter.GroqAiRepo, db repository.GroqDatabaseRepo, growth G
 	return &AiUsecase{repo: r, db: db, growth: growth}
 }
 
-func (u *AiUsecase) Generate(prompt string, userId string) (ai.GroqAi, pkg.Log) {
+func (u *AiUsecase) MainGenerate(prompt string) (string, pkg.Log) {
 	text, log := u.repo.GenerateText(prompt)
+	return text, log
+}
+
+func (u *AiUsecase) Generate(prompt, userId string) (ai.GroqAi, pkg.Log) {
+	text, log := u.MainGenerate(prompt)
 	if log.Error {
 		return ai.GroqAi{}, log
 	}
@@ -69,7 +73,6 @@ func (u *AiUsecase) Verify(id string, code string) (ai.GroqAi, pkg.Log) {
 	answer := strings.ToLower(generated)
 	answer = strings.TrimSpace(answer)
 	answer = strings.ReplaceAll(answer, `"`, "")
-	fmt.Println(generated)
 
 	if answer != "sim" && answer != "não" {
 		answer = "não"

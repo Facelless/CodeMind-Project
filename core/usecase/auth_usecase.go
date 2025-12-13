@@ -44,6 +44,7 @@ func (u *UserUsecase) Register(dates user.User) (user.User, pkg.Log) {
 		Avatar:   "",
 		Exp:      0,
 		Level:    0,
+		Elo:      "bronze",
 	}
 	id, log := u.db.Insert(context.Background(), result)
 	if log.Error {

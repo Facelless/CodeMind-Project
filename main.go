@@ -31,9 +31,14 @@ func main() {
 	aiController := controller.NewAiController(aiUsecase)
 	userController := controller.NewUserController(userUsecase)
 	progressController := controller.NewProgressController(growthUsecase)
-	matchUsecase := usecase.NewMatchUsecase()
-	wsHandler := server.NewWebsocketHandler(matchUsecase, userRepo)
 
+	hubUc := usecase.NewHub()
+	matchUC := usecase.NewMatchUsecase(*aiUsecase, hubUc)
+	queueUC := usecase.NewQueueUsecase(userRepo, matchUC, hubUc)
+
+	go queueUC.QueueMaker()
+	go matchUC.MatchMaker()
+	wsHandler := server.NewWebsocketHandler(queueUC, hubUc	)
 	r := gin.Default()
 	r.Use(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
